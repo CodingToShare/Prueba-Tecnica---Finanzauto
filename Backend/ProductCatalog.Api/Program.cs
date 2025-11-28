@@ -69,6 +69,36 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Apply migrations automatically on startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        var context = services.GetRequiredService<ProductCatalog.Infrastructure.Data.ApplicationDbContext>();
+        logger.LogInformation("🔄 Applying database migrations...");
+        
+        var pendingMigrations = context.Database.GetPendingMigrations();
+        if (pendingMigrations.Any())
+        {
+            logger.LogInformation($"Found {pendingMigrations.Count()} pending migrations. Applying...");
+            context.Database.Migrate();
+            logger.LogInformation("✅ Migrations applied successfully!");
+        }
+        else
+        {
+            logger.LogInformation("✅ Database is up to date!");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Error applying migrations");
+        throw;
+    }
+}
+
 // Configure the HTTP request pipeline.
 // Global exception handler must be first in the pipeline
 app.UseGlobalExceptionHandler();

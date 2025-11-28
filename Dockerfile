@@ -27,21 +27,11 @@ RUN dotnet build "ProductCatalog.Api/ProductCatalog.Api.csproj" -c Release -o /a
 RUN dotnet publish "ProductCatalog.Api/ProductCatalog.Api.csproj" -c Release -o /app/publish
 
 # Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/sdk:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
-# Install curl and postgresql-client for health checks and migrations
+# Install curl and postgresql-client for health checks and seed data
 RUN apt-get update && apt-get install -y curl postgresql-client && rm -rf /var/lib/apt/lists/*
-
-# Install dotnet-ef tool globally
-RUN dotnet tool install --global dotnet-ef --version 10.0.0
-ENV PATH="${PATH}:/root/.dotnet/tools"
-
-# Copy project files needed for migrations to /src directory
-COPY --from=build /app/ProductCatalog.Infrastructure /src/ProductCatalog.Infrastructure
-COPY --from=build /app/ProductCatalog.Api /src/ProductCatalog.Api
-COPY --from=build /app/ProductCatalog.Application /src/ProductCatalog.Application
-COPY --from=build /app/ProductCatalog.Domain /src/ProductCatalog.Domain
 
 # Copy published application to /app
 COPY --from=build /app/publish .
