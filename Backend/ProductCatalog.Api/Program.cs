@@ -72,16 +72,15 @@ var app = builder.Build();
 // Global exception handler must be first in the pipeline
 app.UseGlobalExceptionHandler();
 
-if (app.Environment.IsDevelopment())
+// Enable Swagger in all environments (including Production)
+app.MapOpenApi();
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Catalog API v1");
-        options.RoutePrefix = "swagger"; // Access at /swagger
-    });
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Catalog API v1");
+    options.RoutePrefix = "swagger"; // Access at /swagger
+    options.DocumentTitle = "Product Catalog API - Swagger UI";
+});
 
 app.UseHttpsRedirection();
 
