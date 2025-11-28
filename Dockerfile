@@ -6,12 +6,12 @@ WORKDIR /app
 
 # Copy solution and project files from Backend directory
 # Build context is repo root, so we copy from Backend/
-COPY Backend/ProductCatalog.sln ./
-COPY Backend/ProductCatalog.Api/ ./ProductCatalog.Api/
-COPY Backend/ProductCatalog.Application/ ./ProductCatalog.Application/
-COPY Backend/ProductCatalog.Domain/ ./ProductCatalog.Domain/
-COPY Backend/ProductCatalog.Infrastructure/ ./ProductCatalog.Infrastructure/
-COPY Backend/ProductCatalog.Tests/ ./ProductCatalog.Tests/
+COPY ProductCatalog.sln ./
+COPY ProductCatalog.Api/ ./ProductCatalog.Api/
+COPY ProductCatalog.Application/ ./ProductCatalog.Application/
+COPY ProductCatalog.Domain/ ./ProductCatalog.Domain/
+COPY ProductCatalog.Infrastructure/ ./ProductCatalog.Infrastructure/
+COPY ProductCatalog.Tests/ ./ProductCatalog.Tests/
 
 # Restore dependencies
 RUN dotnet restore "ProductCatalog.sln"
