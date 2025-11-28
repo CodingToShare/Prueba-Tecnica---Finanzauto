@@ -1,0 +1,35 @@
+# Git files
+**/.git
+**/.gitignore
+**/.github
+
+# IDE and editor files
+**/.vs
+**/.vscode
+**/.idea
+**/.DS_Store
+
+# Build artifacts
+**/bin
+**/obj
+**/dist
+**/build
+
+# Dependencies
+**/node_modules
+**/packages
+
+# Test files
+**/*.Test
+**/test
+**/tests
+
+# Documentation (exclude from image)
+README.md
+*.md
+!CLAUDE.md
+
+# Environment files (will be set in Azure)
+**/.env
+**/.env.local
+**/.env.*.local
