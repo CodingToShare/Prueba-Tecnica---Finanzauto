@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:14-alpine
+    container_name: productcatalog-db
+    environment:
+      POSTGRES_DB: ProductCatalogDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - productcatalog-network
+
+  # Backend API (.NET)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: productcatalog-api
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=ProductCatalogDb;Username=postgres;Password=postgres
+      - Jwt__Key=your-super-secret-key-minimum-32-characters-long-for-security!
+      - Jwt__Issuer=ProductCatalogApi
+      - Jwt__Audience=ProductCatalogClient
+      - Jwt__ExpirationHours=24
+      - Cors__AllowedOrigins=http://localhost:3000,http://localhost:5173,http://localhost:8080
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - productcatalog-network
+
+  # Frontend (React + Vite)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:5000
+    container_name: productcatalog-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - productcatalog-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  productcatalog-network:
+    driver: bridge
