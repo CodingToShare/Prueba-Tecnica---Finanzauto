@@ -30,11 +30,16 @@ RUN dotnet publish "ProductCatalog.Api/ProductCatalog.Api.csproj" -c Release -o 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install curl and postgresql-client for health checks and migrations
+RUN apt-get update && apt-get install -y curl postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # Copy published application from build stage
 COPY --from=build /app/publish .
+
+# Copy entrypoint script and seed data
+COPY Backend/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY Backend/seed-data.sql /app/seed-data.sql
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Set environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production
@@ -48,4 +53,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/health || exit 1
 
 # Entry point
-ENTRYPOINT ["dotnet", "ProductCatalog.Api.dll"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

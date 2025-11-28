@@ -83,27 +83,6 @@ app.UseSwaggerUI(options =>
     options.DocumentTitle = "Product Catalog API - Swagger UI";
 });
 
-// Apply pending migrations automatically on startup
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<ProductCatalog.Infrastructure.Data.ApplicationDbContext>();
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        
-        logger.LogInformation("🔄 Checking for pending database migrations...");
-        context.Database.Migrate();
-        logger.LogInformation("✅ Database migrations applied successfully!");
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "❌ An error occurred while migrating the database.");
-        throw;
-    }
-}
-
 app.UseHttpsRedirection();
 
 app.UseCors("CorsPolicy");

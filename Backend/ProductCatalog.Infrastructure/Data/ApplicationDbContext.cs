@@ -34,9 +34,6 @@ namespace ProductCatalog.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new OrderDetailConfiguration());
             modelBuilder.ApplyConfiguration(new ShipperConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
-
-            // Seed initial data
-            DbInitializer.SeedData(modelBuilder);
         }
     }
 }
