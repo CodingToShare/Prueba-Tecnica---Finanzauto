@@ -18,8 +18,6 @@ namespace ProductCatalog.Infrastructure.Data
                     Username = "admin",
                     PasswordHash = HashPassword("Admin123!"),
                     Email = "admin@productcatalog.com",
-                    FirstName = "Admin",
-                    LastName = "System",
                     Role = "Admin",
                     IsActive = true,
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
@@ -30,8 +28,6 @@ namespace ProductCatalog.Infrastructure.Data
                     Username = "user",
                     PasswordHash = HashPassword("User123!"),
                     Email = "user@productcatalog.com",
-                    FirstName = "Regular",
-                    LastName = "User",
                     Role = "User",
                     IsActive = true,
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)

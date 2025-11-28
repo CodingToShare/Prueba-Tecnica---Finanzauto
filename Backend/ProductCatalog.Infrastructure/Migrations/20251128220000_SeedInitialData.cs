@@ -14,11 +14,11 @@ namespace ProductCatalog.Infrastructure.Migrations
             // Seed Users
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "UserID", "Username", "PasswordHash", "Email", "FirstName", "LastName", "Role", "IsActive", "CreatedAt", "LastLogin" },
+                columns: new[] { "UserID", "Username", "PasswordHash", "Email", "Role", "IsActive", "CreatedAt" },
                 values: new object[,]
                 {
-                    { 1, "admin", "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=", "admin@productcatalog.com", "Admin", "System", "Admin", true, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), null },
-                    { 2, "user", "JQZSfMJBQvvgC5GfBl0dw6x68B6bT9O5jj4U8Gs6dA4=", "user@productcatalog.com", "Regular", "User", "User", true, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), null }
+                    { 1, "admin", "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=", "admin@productcatalog.com", "Admin", true, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                    { 2, "user", "JQZSfMJBQvvgC5GfBl0dw6x68B6bT9O5jj4U8Gs6dA4=", "user@productcatalog.com", "User", true, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
                 });
 
             // Seed Categories
