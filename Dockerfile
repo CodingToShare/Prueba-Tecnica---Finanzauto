@@ -11,7 +11,7 @@ COPY ProductCatalog.Api/ ./ProductCatalog.Api/
 COPY ProductCatalog.Application/ ./ProductCatalog.Application/
 COPY ProductCatalog.Domain/ ./ProductCatalog.Domain/
 COPY ProductCatalog.Infrastructure/ ./ProductCatalog.Infrastructure/
-COPY ProductCatalog.Tests/ ./ProductCatalog.Tests/
+# COPY ProductCatalog.Tests/ ./ProductCatalog.Tests/
 
 # Restore dependencies
 RUN dotnet restore "ProductCatalog.sln"
