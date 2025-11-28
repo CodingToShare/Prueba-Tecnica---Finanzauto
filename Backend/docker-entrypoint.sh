@@ -17,20 +17,22 @@ cd /app
 dotnet ProductCatalog.Api.dll &
 API_PID=$!
 
-# Wait for API to apply migrations (check if Users table exists)
+# Wait for API to apply migrations (check if any table exists)
 echo "⏳ Waiting for migrations to be applied..."
 for i in $(seq 1 30); do
-  if PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -c '\d "Users"' >/dev/null 2>&1; then
-    echo "✅ Migrations applied successfully!"
+  TABLE_COUNT=$(PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';" 2>/dev/null | tr -d ' ')
+  if [ "$TABLE_COUNT" -gt "0" ]; then
+    echo "✅ Migrations applied successfully! Found $TABLE_COUNT tables."
     break
   fi
   echo "⏳ Waiting for migrations... ($i/30)"
   sleep 2
 done
 
-# Verify table exists before seeding
-if ! PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -c '\d "Users"' >/dev/null 2>&1; then
-  echo "❌ ERROR: Migrations failed to apply. Users table does not exist."
+# Verify tables exist before seeding
+TABLE_COUNT=$(PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';" 2>/dev/null | tr -d ' ')
+if [ "$TABLE_COUNT" -eq "0" ]; then
+  echo "❌ ERROR: Migrations failed to apply. No tables found in database."
   echo "Check API logs for migration errors."
   wait $API_PID
   exit 1
@@ -38,9 +40,9 @@ fi
 
 # Execute seed data script
 echo "🌱 Applying seed data..."
-PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/seed-data.sql 2>&1 | grep -v "ERROR" || true
+PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/seed-data.sql 2>&1 | grep -v "already exists" | grep -v "does not exist" || true
 
-echo "✅ Setup complete! API is running."
+echo "✅ Setup complete! API is running with $TABLE_COUNT tables and seed data."
 
 # Keep API running in foreground
 wait $API_PID
