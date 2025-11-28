@@ -49,7 +49,9 @@ COPY --from=build /app/publish .
 # Copy entrypoint script and seed data
 COPY Backend/docker-entrypoint.sh /app/docker-entrypoint.sh
 COPY Backend/seed-data.sql /app/seed-data.sql
-RUN chmod +x /app/docker-entrypoint.sh
+
+# Convert line endings to Unix format and make executable
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 # Set environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production
