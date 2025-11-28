@@ -167,11 +167,13 @@ Creates:
 - GitHub CI/CD pipeline ready
 
 ### Docker Build & Push
+Build context must be **repository root** (`.`) so Dockerfile can access `Backend/` directory:
 ```powershell
 docker build -t $ACR_URL/productcatalog-api:latest .
 az acr login --name $ACR_NAME
 docker push $ACR_URL/productcatalog-api:latest
 ```
+**Important**: Dockerfile uses `COPY Backend/ /app/` from repo root context. Do NOT run from `Backend/` subdirectory.
 
 ### Database Migrations on Azure
 ```bash
@@ -192,6 +194,11 @@ dotnet ef database update \
 - `ACR_URL`, `ACR_USERNAME`, `ACR_PASSWORD`
 
 **Reference docs:** `AZURE_DEPLOYMENT.md`, `AZURE_QUICK_START.md`, `DEPLOYMENT_CHECKLIST.md`
+
+### Troubleshooting Docker Builds
+- **Error: `Backend/ProductCatalog.sln: not found`** → Dockerfile must be run with build context at repo root (`.`), not from `Backend/` subdirectory. GitHub Actions uses correct context in `azure-deploy-backend.yml`.
+- **Error: `failed to configure registry cache importer`** → Buildcache image doesn't exist yet; first build will create it. Subsequent builds will use cache.
+- **Build cache issues** → Clear with: `docker system prune -a --volumes`
 
 ---
 

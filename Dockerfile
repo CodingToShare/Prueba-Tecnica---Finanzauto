@@ -2,15 +2,11 @@
 
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /app
 
-# Copy solution and project files
-COPY Backend/ProductCatalog.sln ./
-COPY Backend/ProductCatalog.Api/ ./ProductCatalog.Api/
-COPY Backend/ProductCatalog.Application/ ./ProductCatalog.Application/
-COPY Backend/ProductCatalog.Domain/ ./ProductCatalog.Domain/
-COPY Backend/ProductCatalog.Infrastructure/ ./ProductCatalog.Infrastructure/
-COPY Backend/ProductCatalog.Tests/ ./ProductCatalog.Tests/
+# Copy solution and project files from Backend directory
+# Build context is repo root, so we copy from Backend/
+COPY Backend/ /app/
+WORKDIR /app
 
 # Restore dependencies
 RUN dotnet restore "ProductCatalog.sln"
