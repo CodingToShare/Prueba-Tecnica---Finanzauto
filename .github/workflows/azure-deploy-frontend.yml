@@ -9,6 +9,16 @@ on:
       - 'Dockerfile.frontend'
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
 
 env:
   REGISTRY: ${{ secrets.ACR_URL }}
