@@ -6,18 +6,22 @@ WORKDIR /app
 
 # Copy solution and project files from Backend directory
 # Build context is repo root, so we copy from Backend/
-COPY Backend/ProductCatalog.sln ./
+COPY Backend/ProductCatalog.Api/*.csproj ./ProductCatalog.Api/
+COPY Backend/ProductCatalog.Application/*.csproj ./ProductCatalog.Application/
+COPY Backend/ProductCatalog.Domain/*.csproj ./ProductCatalog.Domain/
+COPY Backend/ProductCatalog.Infrastructure/*.csproj ./ProductCatalog.Infrastructure/
+
+# Restore dependencies (just for API project, will restore dependencies)
+RUN dotnet restore "ProductCatalog.Api/ProductCatalog.Api.csproj"
+
+# Copy remaining source code
 COPY Backend/ProductCatalog.Api/ ./ProductCatalog.Api/
 COPY Backend/ProductCatalog.Application/ ./ProductCatalog.Application/
 COPY Backend/ProductCatalog.Domain/ ./ProductCatalog.Domain/
 COPY Backend/ProductCatalog.Infrastructure/ ./ProductCatalog.Infrastructure/
-# COPY Backend/ProductCatalog.Tests/ ./ProductCatalog.Tests/
-
-# Restore dependencies
-RUN dotnet restore "ProductCatalog.sln"
 
 # Build the application
-RUN dotnet build "ProductCatalog.sln" -c Release -o /app/build
+RUN dotnet build "ProductCatalog.Api/ProductCatalog.Api.csproj" -c Release -o /app/build
 
 # Publish
 RUN dotnet publish "ProductCatalog.Api/ProductCatalog.Api.csproj" -c Release -o /app/publish
