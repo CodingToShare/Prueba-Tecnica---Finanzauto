@@ -14,7 +14,7 @@ echo "✅ PostgreSQL is ready!"
 # Apply EF Core migrations
 echo "🔄 Applying database migrations..."
 export ConnectionStrings__DefaultConnection="Host=db;Port=5432;Database=ProductCatalogDb;Username=postgres;Password=postgres"
-dotnet ef database update --project /app/ProductCatalog.Infrastructure/ProductCatalog.Infrastructure.csproj --startup-project /app/ProductCatalog.Api/ProductCatalog.Api.csproj --no-build || echo "⚠️  Migrations may already be applied"
+dotnet ef database update --project /src/ProductCatalog.Infrastructure/ProductCatalog.Infrastructure.csproj --startup-project /src/ProductCatalog.Api/ProductCatalog.Api.csproj --no-build || echo "⚠️  Migrations may already be applied"
 
 # Execute seed data script
 echo "🌱 Applying seed data..."

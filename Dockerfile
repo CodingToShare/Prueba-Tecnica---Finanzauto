@@ -37,14 +37,14 @@ RUN apt-get update && apt-get install -y curl postgresql-client && rm -rf /var/l
 RUN dotnet tool install --global dotnet-ef --version 10.0.0
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
-# Copy published application from build stage
-COPY --from=build /app/publish .
+# Copy project files needed for migrations to /src directory
+COPY --from=build /app/ProductCatalog.Infrastructure /src/ProductCatalog.Infrastructure
+COPY --from=build /app/ProductCatalog.Api /src/ProductCatalog.Api
+COPY --from=build /app/ProductCatalog.Application /src/ProductCatalog.Application
+COPY --from=build /app/ProductCatalog.Domain /src/ProductCatalog.Domain
 
-# Copy project files needed for migrations
-COPY --from=build /app/ProductCatalog.Infrastructure /app/ProductCatalog.Infrastructure
-COPY --from=build /app/ProductCatalog.Api /app/ProductCatalog.Api
-COPY --from=build /app/ProductCatalog.Application /app/ProductCatalog.Application
-COPY --from=build /app/ProductCatalog.Domain /app/ProductCatalog.Domain
+# Copy published application to /app
+COPY --from=build /app/publish .
 
 # Copy entrypoint script and seed data
 COPY Backend/docker-entrypoint.sh /app/docker-entrypoint.sh
