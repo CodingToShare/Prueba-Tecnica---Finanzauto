@@ -1,52 +1,71 @@
 #!/bin/sh
 set -e
 
-echo "🔄 Waiting for database to be ready..."
+echo "🔄 Starting Product Catalog API..."
 
-# Wait for PostgreSQL to be ready
-until PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -c '\q' 2>/dev/null; do
-  echo "⏳ PostgreSQL is unavailable - sleeping"
-  sleep 2
-done
-
-echo "✅ PostgreSQL is ready!"
-
-# Start API in background
-echo "🚀 Starting API..."
-cd /app
-dotnet ProductCatalog.Api.dll &
-API_PID=$!
-
-# Wait for API to apply migrations (check if any table exists)
-echo "⏳ Waiting for migrations to be applied..."
-for i in $(seq 1 30); do
-  TABLE_COUNT=$(PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';" 2>/dev/null | tr -d ' ')
-  if [ "$TABLE_COUNT" -gt "0" ]; then
-    echo "✅ Migrations applied successfully! Found $TABLE_COUNT tables."
-    break
-  fi
-  echo "⏳ Waiting for migrations... ($i/30)"
-  sleep 2
-done
-
-# Verify tables exist before seeding
-TABLE_COUNT=$(PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';" 2>/dev/null | tr -d ' ')
-if [ "$TABLE_COUNT" -eq "0" ]; then
-  echo "❌ ERROR: Migrations failed to apply. No tables found in database."
-  echo "Check API logs for migration errors."
-  wait $API_PID
-  exit 1
+# Detect environment: Azure App Service or Docker Compose
+if [ -n "$ConnectionStrings__ProductCatalogDb" ]; then
+    echo "🌩️  Running in Azure App Service (managed database)"
+    SKIP_DB_SETUP=true
+else
+    echo "🐳 Running in Docker Compose (local database)"
+    SKIP_DB_SETUP=false
 fi
 
-# Execute rename script to lowercase tables and columns
-echo "🔧 Renaming tables and columns to lowercase..."
-PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/rename-tables-to-lowercase.sql 2>&1 | grep -v "already exists" | grep -v "does not exist" || true
-
-# Execute seed data script
-echo "🌱 Applying seed data..."
-PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/seed-data-lowercase.sql 2>&1 | grep -v "already exists" | grep -v "does not exist" || true
-
-echo "✅ Setup complete! API is running with $TABLE_COUNT tables and seed data."
-
-# Keep API running in foreground
-wait $API_PID
+# If running with local database (docker-compose), wait and initialize
+if [ "$SKIP_DB_SETUP" = false ]; then
+    echo "🔄 Waiting for database to be ready..."
+    
+    # Wait for PostgreSQL to be ready
+    until PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -c '\q' 2>/dev/null; do
+      echo "⏳ PostgreSQL is unavailable - sleeping"
+      sleep 2
+    done
+    
+    echo "✅ PostgreSQL is ready!"
+    
+    # Start API in background
+    echo "🚀 Starting API..."
+    cd /app
+    dotnet ProductCatalog.Api.dll &
+    API_PID=$!
+    
+    # Wait for API to apply migrations (check if any table exists)
+    echo "⏳ Waiting for migrations to be applied..."
+    for i in $(seq 1 30); do
+      TABLE_COUNT=$(PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';" 2>/dev/null | tr -d ' ')
+      if [ "$TABLE_COUNT" -gt "0" ]; then
+        echo "✅ Migrations applied successfully! Found $TABLE_COUNT tables."
+        break
+      fi
+      echo "⏳ Waiting for migrations... ($i/30)"
+      sleep 2
+    done
+    
+    # Verify tables exist before seeding
+    TABLE_COUNT=$(PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';" 2>/dev/null | tr -d ' ')
+    if [ "$TABLE_COUNT" -eq "0" ]; then
+      echo "❌ ERROR: Migrations failed to apply. No tables found in database."
+      echo "Check API logs for migration errors."
+      wait $API_PID
+      exit 1
+    fi
+    
+    # Execute rename script to lowercase tables and columns
+    echo "🔧 Renaming tables and columns to lowercase..."
+    PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/rename-tables-to-lowercase.sql 2>&1 | grep -v "already exists" | grep -v "does not exist" || true
+    
+    # Execute seed data script
+    echo "🌱 Applying seed data..."
+    PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/seed-data-lowercase.sql 2>&1 | grep -v "already exists" | grep -v "does not exist" || true
+    
+    echo "✅ Setup complete! API is running with $TABLE_COUNT tables and seed data."
+    
+    # Keep API running in foreground
+    wait $API_PID
+else
+    echo "🚀 Starting API in Azure mode (migrations will run automatically)..."
+    echo "Database connection will be managed by Azure App Service"
+    cd /app
+    exec dotnet ProductCatalog.Api.dll
+fi

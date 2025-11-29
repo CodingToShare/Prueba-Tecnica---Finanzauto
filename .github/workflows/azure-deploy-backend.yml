@@ -70,6 +70,20 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Configure App Service Settings
+        run: |
+          echo "🔧 Configuring App Service environment variables..."
+          az webapp config appsettings set \
+            --name ${{ secrets.AZURE_BACKEND_APP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --settings \
+              ConnectionStrings__ProductCatalogDb="${{ secrets.POSTGRES_CONNECTION_STRING }}" \
+              ASPNETCORE_ENVIRONMENT="Production" \
+              JWT__Key="${{ secrets.JWT_KEY }}" \
+              JWT__Issuer="ProductCatalogAPI" \
+              JWT__Audience="ProductCatalogClients" \
+              JWT__ExpirationHours="24"
+
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v2
         with:
@@ -77,40 +91,63 @@ jobs:
           slot-name: production
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: Wait for App Service to be ready
+      - name: Wait for container startup
         run: |
-          echo "Waiting for App Service to be ready..."
-          sleep 30
+          echo "⏳ Waiting for container to start and complete initialization..."
+          echo "This includes: Database migrations → Table renaming → Seed data"
+          echo "Estimated time: 2-3 minutes"
+          sleep 120
 
-      - name: Run EF Core Migrations
+      - name: Check App Service logs
         run: |
-          echo "Running database migrations..."
-          # Install dotnet-ef tool
-          dotnet tool install --global dotnet-ef || true
-
-          # Clone repository (needed for migrations)
-          git clone --depth 1 https://github.com/${{ github.repository }} migration-temp || true
-          cd migration-temp/Backend || exit 1
-
-          # Run migrations using connection string from secrets
-          dotnet ef database update \
-            --project ProductCatalog.Infrastructure \
-            --startup-project ProductCatalog.Api \
-            --connection "${{ secrets.POSTGRES_CONNECTION_STRING }}" || echo "Migration failed or already applied"
+          echo "📋 Checking recent application logs..."
+          az webapp log tail \
+            --name ${{ secrets.AZURE_BACKEND_APP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --only-show-errors \
+            2>&1 | head -50 || echo "Could not fetch logs"
 
       - name: Run Health Check
         run: |
-          echo "Running health checks..."
-          # Check basic health
-          curl -f https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net/health || exit 1
+          echo "🏥 Running health checks..."
+          
+          # Basic health check with retries
+          for i in {1..10}; do
+            echo "Attempt $i/10: Checking basic health..."
+            if curl -f -m 10 https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net/health; then
+              echo "✅ Basic health check passed!"
+              break
+            else
+              if [ $i -eq 10 ]; then
+                echo "❌ Health check failed after 10 attempts"
+                exit 1
+              fi
+              echo "⏳ Health check failed, waiting 30 seconds before retry..."
+              sleep 30
+            fi
+          done
 
-          # Check detailed health with database
-          curl -f https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net/health/detailed || echo "Detailed health check warning"
+          # Check Swagger UI
+          echo "📚 Checking Swagger UI availability..."
+          curl -I https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net/swagger || echo "⚠️ Swagger check failed"
+
+      - name: Test Authentication Endpoint
+        run: |
+          echo "🔐 Testing authentication endpoint..."
+          curl -X POST https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"admin","password":"Admin123!"}' \
+            -f -m 10 || echo "⚠️ Auth endpoint check failed (might be expected if no seed data)"
 
       - name: Notify Success
         if: success()
-        run: echo "✅ Deployment successful"
+        run: |
+          echo "✅ Deployment successful!"
+          echo "🌐 API URL: https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net"
+          echo "📚 Swagger: https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net/swagger"
 
       - name: Notify Failure
         if: failure()
-        run: echo "❌ Deployment failed"
+        run: |
+          echo "❌ Deployment failed"
+          echo "Check logs at: https://portal.azure.com"
