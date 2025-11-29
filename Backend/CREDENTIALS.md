@@ -9,14 +9,14 @@ Esta aplicación incluye datos iniciales que se aplican automáticamente al desp
 ### Usuario Administrador
 - **Username:** `admin`
 - **Password:** `Admin123!`
-- **Email:** admin@productcatalog.com
+- **Email:** admin@finanzauto.com
 - **Rol:** Admin
 - **Permisos:** Acceso completo al sistema
 
 ### Usuario Regular
 - **Username:** `user`
 - **Password:** `User123!`
-- **Email:** user@productcatalog.com
+- **Email:** user@finanzauto.com
 - **Rol:** User
 - **Permisos:** Acceso de lectura y operaciones básicas
 

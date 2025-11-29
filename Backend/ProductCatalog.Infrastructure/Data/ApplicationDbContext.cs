@@ -33,6 +33,19 @@ namespace ProductCatalog.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configure all table names to lowercase for PostgreSQL compatibility
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                // Set table name to lowercase (e.g., "Users" -> "users")
+                entityType.SetTableName(entityType.GetTableName()?.ToLower());
+                
+                // Set column names to lowercase
+                foreach (var property in entityType.GetProperties())
+                {
+                    property.SetColumnName(property.GetColumnName().ToLower());
+                }
+            }
+
             // Aplicar configuraciones
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
             modelBuilder.ApplyConfiguration(new ProductConfiguration());

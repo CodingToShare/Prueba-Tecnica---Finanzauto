@@ -1,29 +1,30 @@
--- Create Users table if not exists (with lowercase columns)
+-- Seed data with lowercase column names
+
+-- Create users table if not exists (for authentication)
 CREATE TABLE IF NOT EXISTS users (
     userid SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
-    passwordhash TEXT NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL,
+    passwordhash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
-    createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    createdat TIMESTAMP NOT NULL DEFAULT NOW(),
     isactive BOOLEAN NOT NULL DEFAULT true
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username);
-CREATE UNIQUE INDEX IF NOT EXISTS ix_users_email ON users (email);
 
--- Seed Users (only if not exists)
--- Password for 'admin' is: Admin123!
--- Password for 'user' is: User123!
-INSERT INTO users (userid, username, passwordhash, email, role, isactive, createdat)
-SELECT 1, 'admin', '$2a$11$Kr5Jpck/YUwCcBRDJJaDIuOvPdsa/PuVS7YcYgnCl89joLzUSuuDi', 'admin@finanzauto.com', 'Admin', true, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
-INSERT INTO users (userid, username, passwordhash, email, role, isactive, createdat)
-SELECT 2, 'user', '$2a$11$MoK4w3oEnN4q6ANvZyNu4OYbOU9.ZRl6dcgrnOXy5ZP1.7G6y00Vy', 'user@finanzauto.com', 'User', true, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'user');
+-- Seed Users (passwords are hashed with BCrypt)
+-- admin:Admin123! / user:User123!
+INSERT INTO users (userid, username, email, passwordhash, role, createdat, isactive)
+SELECT * FROM (VALUES
+    (1, 'admin', 'admin@finanzauto.com', '$2a$11$oZ5rpmG06zQkRP8qHjfwguMzf6KMoMlxhshPRwtg3yK6i2TXy3..K', 'Admin', NOW(), true),
+    (2, 'user', 'user@finanzauto.com', '$2a$11$25C29iBrHq7b6M2di/VYPu/najFklgqimvqYhL1NiJ8enC8FGN33W', 'User', NOW(), true)
+) AS v(userid, username, email, passwordhash, role, createdat, isactive)
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE userid = v.userid);
 
 -- Seed Categories
-INSERT INTO categories ("CategoryID", "CategoryName", "Description")
+INSERT INTO categories (categoryid, categoryname, description)
 SELECT * FROM (VALUES
     (1, 'Beverages', 'Soft drinks, coffees, teas, beers, and ales'),
     (2, 'Condiments', 'Sweet and savory sauces, relishes, spreads, and seasonings'),
@@ -33,22 +34,22 @@ SELECT * FROM (VALUES
     (6, 'Meat/Poultry', 'Prepared meats'),
     (7, 'Produce', 'Dried fruit and bean curd'),
     (8, 'Seafood', 'Seaweed and fish')
-) AS v("CategoryID", "CategoryName", "Description")
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE "CategoryID" = v."CategoryID");
+) AS v(categoryid, categoryname, description)
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE categoryid = v.categoryid);
 
 -- Seed Suppliers
-INSERT INTO suppliers ("SupplierID", "CompanyName", "ContactName", "ContactTitle", "Address", "City", "Region", "PostalCode", "Country", "Phone")
+INSERT INTO suppliers (supplierid, companyname, contactname, contacttitle, address, city, region, postalcode, country, phone)
 SELECT * FROM (VALUES
     (1, 'Exotic Liquids', 'Charlotte Cooper', 'Purchasing Manager', '49 Gilbert St.', 'London', NULL, 'EC1 4SD', 'UK', '(171) 555-2222'),
     (2, 'New Orleans Cajun Delights', 'Shelley Burke', 'Order Administrator', 'P.O. Box 78934', 'New Orleans', 'LA', '70117', 'USA', '(100) 555-4822'),
     (3, 'Grandma Kelly''s Homestead', 'Regina Murphy', 'Sales Representative', '707 Oxford Rd.', 'Ann Arbor', 'MI', '48104', 'USA', '(313) 555-5735'),
     (4, 'Tokyo Traders', 'Yoshi Nagase', 'Marketing Manager', '9-8 Sekimai Musashino-shi', 'Tokyo', NULL, '100', 'Japan', '(03) 3555-5011'),
     (5, 'Cooperativa de Quesos ''Las Cabras''', 'Antonio del Valle Saavedra', 'Export Administrator', 'Calle del Rosal 4', 'Oviedo', 'Asturias', '33007', 'Spain', '(98) 598 76 54')
-) AS v("SupplierID", "CompanyName", "ContactName", "ContactTitle", "Address", "City", "Region", "PostalCode", "Country", "Phone")
-WHERE NOT EXISTS (SELECT 1 FROM suppliers WHERE "SupplierID" = v."SupplierID");
+) AS v(supplierid, companyname, contactname, contacttitle, address, city, region, postalcode, country, phone)
+WHERE NOT EXISTS (SELECT 1 FROM suppliers WHERE supplierid = v.supplierid);
 
 -- Seed Products
-INSERT INTO products ("ProductID", "ProductName", "SupplierID", "CategoryID", "QuantityPerUnit", "UnitPrice", "UnitsInStock", "UnitsOnOrder", "ReorderLevel", "Discontinued")
+INSERT INTO products (productid, productname, supplierid, categoryid, quantityperunit, unitprice, unitsinstock, unitsonorder, reorderlevel, discontinued)
 SELECT * FROM (VALUES
     (1, 'Chai', 1, 1, '10 boxes x 20 bags', 18.00, 39, 0, 10, false),
     (2, 'Chang', 1, 1, '24 - 12 oz bottles', 19.00, 17, 40, 25, false),
@@ -62,21 +63,21 @@ SELECT * FROM (VALUES
     (10, 'Ikura', 4, 8, '12 - 200 ml jars', 31.00, 31, 0, 0, false),
     (11, 'Queso Cabrales', 5, 4, '1 kg pkg.', 21.00, 22, 30, 30, false),
     (12, 'Queso Manchego La Pastora', 5, 4, '10 - 500 g pkgs.', 38.00, 86, 0, 0, false)
-) AS v("ProductID", "ProductName", "SupplierID", "CategoryID", "QuantityPerUnit", "UnitPrice", "UnitsInStock", "UnitsOnOrder", "ReorderLevel", "Discontinued")
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE "ProductID" = v."ProductID");
+) AS v(productid, productname, supplierid, categoryid, quantityperunit, unitprice, unitsinstock, unitsonorder, reorderlevel, discontinued)
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE productid = v.productid);
 
 -- Seed Shippers
-INSERT INTO shippers ("ShipperID", "CompanyName", "Phone")
+INSERT INTO shippers (shipperid, companyname, phone)
 SELECT * FROM (VALUES
     (1, 'Speedy Express', '(503) 555-9831'),
     (2, 'United Package', '(503) 555-3199'),
     (3, 'Federal Shipping', '(503) 555-9931')
-) AS v("ShipperID", "CompanyName", "Phone")
-WHERE NOT EXISTS (SELECT 1 FROM shippers WHERE "ShipperID" = v."ShipperID");
+) AS v(shipperid, companyname, phone)
+WHERE NOT EXISTS (SELECT 1 FROM shippers WHERE shipperid = v.shipperid);
 
--- Update sequences to avoid conflicts
-SELECT setval('categories_CategoryID_seq', (SELECT MAX("CategoryID") FROM categories));
-SELECT setval('suppliers_SupplierID_seq', (SELECT MAX("SupplierID") FROM suppliers));
-SELECT setval('products_ProductID_seq', (SELECT MAX("ProductID") FROM products));
-SELECT setval('shippers_ShipperID_seq', (SELECT MAX("ShipperID") FROM shippers));
-SELECT setval('users_UserID_seq', (SELECT MAX("UserID") FROM users));
+-- Reset sequences
+SELECT setval('users_userid_seq', (SELECT MAX(userid) FROM users));
+SELECT setval('categories_categoryid_seq', (SELECT MAX(categoryid) FROM categories));
+SELECT setval('suppliers_supplierid_seq', (SELECT MAX(supplierid) FROM suppliers));
+SELECT setval('products_productid_seq', (SELECT MAX(productid) FROM products));
+SELECT setval('shippers_shipperid_seq', (SELECT MAX(shipperid) FROM shippers));

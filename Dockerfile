@@ -38,7 +38,8 @@ COPY --from=build /app/publish .
 
 # Copy entrypoint script and seed data
 COPY Backend/docker-entrypoint.sh /app/docker-entrypoint.sh
-COPY Backend/seed-data.sql /app/seed-data.sql
+COPY Backend/seed-data-lowercase.sql /app/seed-data-lowercase.sql
+COPY Backend/rename-tables-to-lowercase.sql /app/rename-tables-to-lowercase.sql
 
 # Convert line endings to Unix format and make executable
 RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh

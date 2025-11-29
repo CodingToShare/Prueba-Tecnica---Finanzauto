@@ -38,9 +38,13 @@ if [ "$TABLE_COUNT" -eq "0" ]; then
   exit 1
 fi
 
+# Execute rename script to lowercase tables and columns
+echo "🔧 Renaming tables and columns to lowercase..."
+PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/rename-tables-to-lowercase.sql 2>&1 | grep -v "already exists" | grep -v "does not exist" || true
+
 # Execute seed data script
 echo "🌱 Applying seed data..."
-PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/seed-data.sql 2>&1 | grep -v "already exists" | grep -v "does not exist" || true
+PGPASSWORD=postgres psql -h "db" -U "postgres" -d "ProductCatalogDb" -f /app/seed-data-lowercase.sql 2>&1 | grep -v "already exists" | grep -v "does not exist" || true
 
 echo "✅ Setup complete! API is running with $TABLE_COUNT tables and seed data."
 
