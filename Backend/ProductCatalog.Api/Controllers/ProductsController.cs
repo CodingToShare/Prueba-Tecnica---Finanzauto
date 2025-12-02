@@ -54,6 +54,20 @@ namespace ProductCatalog.Api.Controllers
         }
 
         /// <summary>
+        /// Create a new product
+        /// </summary>
+        [HttpPost]
+        [Authorize(Policy = "UserOrAdmin")]
+        public async Task<ActionResult<ProductDto>> CreateProduct([FromBody] CreateProductDto createDto)
+        {
+            _logger.LogInformation("Creating new product: {ProductName}", createDto.ProductName);
+
+            var product = await _productService.CreateProductAsync(createDto);
+
+            return CreatedAtAction(nameof(GetProduct), new { id = product.ProductID }, product);
+        }
+
+        /// <summary>
         /// Generate and insert N random products in bulk (optimized for large datasets)
         /// </summary>
         [HttpPost("bulk")]
