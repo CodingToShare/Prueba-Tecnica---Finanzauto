@@ -15,7 +15,7 @@
   --color-info: #06b6d4;
 
   /* Neutral Colors */
-  --color-bg: #5e5e5e;
+  --color-bg: #ffffff;
   --color-bg-secondary: #f8fafc;
   --color-bg-tertiary: #f1f5f9;
   --color-border: #e2e8f0;
@@ -83,6 +83,19 @@
   --z-modal: 1050;
   --z-popover: 1060;
   --z-tooltip: 1070;
+
+  /* Legacy variable aliases for backward compatibility */
+  --primary-color: var(--color-primary);
+  --primary-hover: var(--color-primary-dark);
+  --error-color: var(--color-error);
+  --border-color: var(--color-border);
+  --background-color: var(--color-bg);
+  --background-hover: var(--color-bg-secondary);
+  --card-background: var(--color-bg);
+  --card-shadow: var(--shadow-md);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --border-radius: var(--radius-md);
 }
 
 /* CSS Reset and Base Styles */
