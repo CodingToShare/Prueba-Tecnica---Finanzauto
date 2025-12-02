@@ -132,6 +132,25 @@ docker run -d -p 3000:80 \
   -e VITE_API_BASE_URL=http://localhost:8080 \
   productcatalog-web
 ```
+#### Docker Compose
+
+```bash
+# Limpiar todo el sistema de Docker
+docker system prune -a --volumes
+
+# O solo el caché de build
+docker builder prune -a
+
+# Luego reconstruir
+docker-compose up --build# Limpiar todo el sistema de Docker
+docker system prune -a --volumes
+
+# O solo el caché de build
+docker builder prune -a
+
+# Luego reconstruir
+docker-compose up --build
+```
 
 ## 📦 Deployment a Azure
 
@@ -162,8 +181,6 @@ curl https://app-productcatalog-api.azurewebsites.net/health
 # Frontend
 curl https://app-productcatalog-web.azurewebsites.net/health
 ```
-
-Ver documentación completa en [`DEPLOYMENT.md`](DEPLOYMENT.md)
 
 ## 🔌 API Endpoints
 
@@ -316,10 +333,6 @@ URLs Producción:
 - ESLint + Prettier
 - Component-based architecture
 - Custom hooks para lógica reutilizable
-
-## 🐛 Troubleshooting
-
-Ver sección de Troubleshooting en [`DEPLOYMENT.md`](DEPLOYMENT.md)
 
 ### Problemas Comunes
 
