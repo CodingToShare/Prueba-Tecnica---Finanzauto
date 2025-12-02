@@ -96,7 +96,9 @@
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  padding-top: 1.5rem;
+  padding-top: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
   border-top: 1px solid var(--border-color);
 }
 
