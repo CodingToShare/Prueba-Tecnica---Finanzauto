@@ -40,12 +40,10 @@ export const productsService = {
   },
 
   /**
-   * Create new product (POST not in API spec, using PUT logic)
+   * Create new product
    */
-  create: async (_data: UpdateProductDto): Promise<ProductDto> => {
-    // Note: API spec doesn't have POST /api/Products endpoint
-    // This is a placeholder - backend needs to add this endpoint
-    throw new Error('Create endpoint not available in API spec');
+  create: async (data: UpdateProductDto): Promise<ProductDto> => {
+    return await apiClient.post<ProductDto>('/api/Products', data);
   },
 
   /**
